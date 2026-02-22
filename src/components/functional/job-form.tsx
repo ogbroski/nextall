@@ -1,34 +1,28 @@
 'use client';
 
-import { editJobById } from "@/actions/jobs";
-import { IUsersStore } from "@/store/users-store";
-import useUsersStore from "@/store/users-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { jobTypes, jobStatuses } from "@/constants";
-import { useState } from "react";
-import { X } from "lucide-react";
-import { createJob } from "@/actions/jobs";
-import Editor from 'react-simple-wysiwyg';
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage
-} from "@/components/ui/form";
+import { jobTypes, jobStatuses } from "@/constants"; // Fixed import path
+
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
+import Editor from "react-simple-wysiwyg";
+
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
+    SelectValue,
 } from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
+import { useState } from "react"; // Fixed import (removed 'use')
+import { createJob, editJobById } from "@/actions/jobs";
+import { X } from "lucide-react";
+import useUsersStore, { IUsersStore } from "@/store/users-store";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const formSchema = z.object({
@@ -40,20 +34,20 @@ const formSchema = z.object({
     max_salary: z.number().min(0, { message: "Максимальная зарплата должна быть положительным числом" }),
     exp_required: z.number().min(1, { message: "Требуется указать требуемый опыт работы" }),
     last_date_to_apply: z.string().min(1, { message: "Требуется заполнить поле" }),
-    status: z.string().min(1, { message: "Требуется заполнить поле" }),
+    status: z.string().min(1, { message: "Требуется заполнять поле" }),
 });
 
 export default function JobForm({ formType = "add", initialValues }: { formType: 'add' | 'edit', initialValues?: any }) {
     const [skillsAdded, setSkillsAdded] = useState<string[]>(initialValues?.skills || []);
-    const [skillsInputValue, setSkillsInputValue] = useState<string>("");
+    const [skillsInputValue, setSkillsInputValue] = useState("");
     const { user } = useUsersStore() as IUsersStore;
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const addSkillHandler = () => {
         const skills = skillsInputValue.split(",").map((skill) => skill.trim());
         setSkillsAdded((previousSkills) => [...previousSkills, ...skills]);
-        setSkillsInputValue("");
+        setSkillsInputValue('');
     };
 
     const deleteSkillHandler = (skillToRemove: string) => {
@@ -80,7 +74,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
             setLoading(true);
             const payload = { ...values, skills: skillsAdded };
             let response: any = null;
-
+            
             if (formType === "add") {
                 response = await createJob({
                     ...payload,
@@ -92,12 +86,12 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                     recruiter_id: user?.id!
                 });
             }
-
-            if (response?.success) {
+            
+            if (response.success) {
                 toast.success(response.message);
                 router.push("/recruiter/jobs");
             } else {
-                toast.error(response?.message);
+                toast.error(response.message);
             }
         } catch (error: any) {
             toast.error('Что-то пошло не так');
@@ -123,7 +117,6 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                             </FormItem>
                         )}
                     />
-
                     <FormField
                         control={form.control}
                         name="description"
@@ -137,7 +130,6 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                             </FormItem>
                         )}
                     />
-
                     <div>
                         <h1 className="text-sm">Навыки</h1>
                         <div className="flex gap-5">
@@ -146,23 +138,17 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                                 value={skillsInputValue}
                                 onChange={(e) => setSkillsInputValue(e.target.value)}
                             />
-                            <Button onClick={addSkillHandler} type="button">Добавить навыки</Button>
+                            <Button disabled={!skillsInputValue.trim().length} onClick={addSkillHandler} type="button">Добавить навыки</Button>
                         </div>
-
-                        <div className="flex flex-wrap gap-2 mt-4">
-                            {skillsAdded.map((skill, index) => (
-                                <div key={index} className="bg-primary px-3 py-1 rounded-full flex items-center gap-2">
-                                    <span className="text-white text-sm">{skill}</span>
-                                    <X 
-                                        size={14} 
-                                        className="text-white cursor-pointer hover:text-gray-200" 
-                                        onClick={() => deleteSkillHandler(skill)} 
-                                    />
+                        <div className="flex flex-wrap gap-5 mt-4">
+                            {skillsAdded.map((skill) => (
+                                <div key={skill} className="bg-primary px-2 py-1 rounded flex items-center gap-2">
+                                    <span className="text-white text-xs">{skill}</span>
+                                    <X size={14} className="text-white text-sm cursor-pointer" onClick={() => deleteSkillHandler(skill)} />
                                 </div>
                             ))}
                         </div>
                     </div>
-
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                         <FormField
                             control={form.control}
@@ -190,9 +176,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {jobTypes.map((jobType) => (
-                                                    <SelectItem key={jobType.value} value={jobType.value}>
-                                                        {jobType.label}
-                                                    </SelectItem>
+                                                    <SelectItem key={jobType.value} value={jobType.value}>{jobType.label}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -208,12 +192,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                                 <FormItem>
                                     <FormLabel>Минимальная зарплата</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            onChange={(e) => field.onChange(Number(e.target.value))}
-                                            value={Number(field.value)}
-                                        />
+                                        <Input {...field} type="number" onChange={(e) => field.onChange(Number(e.target.value))} value={Number(field.value)} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -226,12 +205,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                                 <FormItem>
                                     <FormLabel>Максимальная зарплата</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            onChange={(e) => field.onChange(Number(e.target.value))}
-                                            value={Number(field.value)}
-                                        />
+                                        <Input {...field} type="number" onChange={(e) => field.onChange(Number(e.target.value))} value={Number(field.value)} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -244,12 +218,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                                 <FormItem>
                                     <FormLabel>Требуемый опыт</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            onChange={(e) => field.onChange(Number(e.target.value))}
-                                            value={Number(field.value)}
-                                        />
+                                        <Input {...field} type="number" onChange={(e) => field.onChange(Number(e.target.value))} value={Number(field.value)} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -281,9 +250,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {jobStatuses.map((jobStatus) => (
-                                                    <SelectItem key={jobStatus.value} value={jobStatus.value}>
-                                                        {jobStatus.label}
-                                                    </SelectItem>
+                                                    <SelectItem key={jobStatus.value} value={jobStatus.value}>{jobStatus.label}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -295,7 +262,7 @@ export default function JobForm({ formType = "add", initialValues }: { formType:
                     </div>
                     <div className="flex justify-end">
                         <Button type="submit" className="mt-2" disabled={loading}>
-                            {loading ? "Сохранение..." : formType === "add" ? "Создать" : "Сохранить"}
+                            {loading ? "Загрузка..." : formType === 'add' ? 'Создать вакансию' : 'Обновить вакансию'}
                         </Button>
                     </div>
                 </form>

@@ -25,4 +25,22 @@ export interface IJob {
     status: string;
     created_at: string;
     updated_at: string;
+    recruiter: IUser;
+    skills: string[];
+}
+
+export interface IApplication {
+    id: number;
+    job_id: number;
+    job_seeker_id: number;
+    recruiter_id: number;
+    cover_letter: string;
+    resume_url: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+
+    job?: IJob;
+    job_seeker?: IUser;
+    recruiter?: IUser;
 }
